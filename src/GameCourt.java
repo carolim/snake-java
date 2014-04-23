@@ -36,6 +36,7 @@ public class GameCourt extends JPanel {
 	public boolean playing = false; // whether the game is running
 	private JLabel status; 
 	
+	//string names of images to be loaded 
 	public static final String game_overimg = "gameover.png";
 	private static BufferedImage img;
 	
@@ -59,7 +60,7 @@ public class GameCourt extends JPanel {
 
 		setBackground(Color.YELLOW);
 		
-		//initialize gameover image & instructions image
+		//initialize game over image & instructions image
 		try {
 			if (img == null) {
 				img = ImageIO.read(new File(game_overimg));
@@ -131,6 +132,12 @@ public class GameCourt extends JPanel {
 		
 		//reset score and level 
 		instructionspressed = false;
+		snake.set_score(0);
+		snake.set_level(1);
+		
+		//reset velocity 
+		SNAKE_VELOCITY_X = 4;
+		SNAKE_VELOCITY_Y = 4;
 		
 		//set playing status to true 
 		playing = true;
@@ -158,7 +165,7 @@ public class GameCourt extends JPanel {
 			snake.move();
 			
 			//check to see if snake has hit heart 
-			if ((snake.intersects(heart))) {
+			if ((heart.intersects(snake))) {
 				
 				//randomly spawn a new bad object 
 				if (Math.random() < 0.3) {
@@ -186,7 +193,7 @@ public class GameCourt extends JPanel {
 				
 				//current heart object 'disappears,' generating
 				//new heart in randomly generated, different location
-				heart.new_location();
+				heart.add_heart();
 				
 				//update score accordingly
 				if (snake.intersects(heart)) {
@@ -205,9 +212,6 @@ public class GameCourt extends JPanel {
 				
 				playing = false;
 				
-				//TO DO: add such that game over appears in the middle 
-				//of the screen
-				
 			}
 			
 			//TO DO: check if snake has hit itself
@@ -225,7 +229,7 @@ public class GameCourt extends JPanel {
 		//check if instructions button has been pressed 
 		if (instructionspressed) {
 			
-		//draw instructions 
+		//draw instructions screen
 		g.drawImage(instructionsimg, 0, 120, 800, 400, null);
 			
 		}
@@ -252,7 +256,7 @@ public class GameCourt extends JPanel {
 /*
  * Stuff to implement: 
  * make panel look nicer!!
- * high score button 
+ * high score button ?
  * IMPT: snake collides with itself
  * need to make sure two objs not generated at same pos
  * eg. heart is not generated where snake body is 

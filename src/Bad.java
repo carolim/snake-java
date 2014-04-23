@@ -52,12 +52,17 @@ public class Bad extends GameObj {
 		
 	}
 	
-	//add a bad object to the game board 
+	//add a random number of bad objects to
+	//random locations on the game board 
 	public void add_bad() {
+		int num_times = (int)(Math.random()*3);
+		
+		 for (int i =0; i<num_times; i++) {
 		//create random position for bad obj
 		int rand_x = (int)(Math.random() * max_x);
 		int rand_y = (int)(Math.random() * max_y);
 		bad_objs.add(new Point(rand_x, rand_y));
+		 }
 		
 	}
 	

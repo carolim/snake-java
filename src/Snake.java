@@ -149,6 +149,16 @@ public class Snake extends GameObj {
 	public void inc_score_heart() {
 		score += 10;
 	}
+
+	//sets snake score as specified
+	public void set_score(int i) {
+		score = i;
+	}
+	
+	//sets level as specified
+	public void set_level(int i) {
+		level = i;	
+	}
 	
 
 }
