@@ -46,8 +46,7 @@ public class Snake extends GameObj {
 		snake_body = new LinkedList<Point>();
 		//add 'head' at initial positions x and y
 		snake_body.addFirst(new Point(pos_x, pos_y));
-		//snake's initial length should be 3
-		growSnake(5);
+		
 	}
 	
 	//override object move method 
@@ -79,9 +78,23 @@ public class Snake extends GameObj {
 	}
 	
 	//method to see if snake intersects itself
-	public boolean intersectsItself() {
-		//FILL IN THIS STUB
+	public boolean willHitItself() {
 		
+		//loop through to see if coordinates of 
+		//the snake's head and any of his body match
+		//if so, the snake has hit itself 
+		if (snake_body.size() > 1) {
+			
+		for (int i=1; i<snake_body.size(); i++) {
+			Point p = snake_body.getFirst();
+			Point p1 = snake_body.get(i);
+			
+			if ((p.x + v_x == p1.x) && (p.y + v_y == p1.y)) 
+				return true;
+			}
+		}
+		
+		//snake has not hit it's own body 
 		return false;
 	}
 	
@@ -113,7 +126,7 @@ public class Snake extends GameObj {
 	//method to increment score when a crown
 	//has been eaten
 	public void inc_score_crown() {
-		score += 10;
+		score += 30;
 	}
 	
 	//method to get current score

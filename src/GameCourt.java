@@ -173,7 +173,7 @@ public class GameCourt extends JPanel {
 				}
 				
 				//if level is high enough, spawn a crown randomly
-				if ((snake.get_level() > 2) && (Math.random() < 0.3)) {
+				if ((snake.current_score() > 150) && (Math.random() < 0.4)) {
 						crown.add_crown();
 				}
 				
@@ -216,7 +216,7 @@ public class GameCourt extends JPanel {
 				//if level is high enough, spawn another crown (although
 				//probability of crown appearing should still be low, 
 				//as it is a relatively 'rarer' object
-				if ((snake.get_level() > 2) && (Math.random() < 0.3)) {
+				if ((snake.current_score() > 150) && (Math.random() < 0.4)) {
 					crown.add_crown();
 				}
 				
@@ -239,7 +239,8 @@ public class GameCourt extends JPanel {
 			}
 			//check if snake has hit the wall
 			//if it has, game over
-			else if ((snake.hasHitWall() || (bad.intersects(snake)))) {
+			else if ((snake.hasHitWall() || (bad.intersects(snake)
+					|| (snake.willHitItself())))) {
 				
 				playing = false;
 				
@@ -288,7 +289,6 @@ public class GameCourt extends JPanel {
  * Stuff to implement: 
  * make panel look nicer!!
  * high score button ?
- * IMPT: snake collides with itself
  * need to make sure two objs not generated at same pos
  * eg. heart is not generated where snake body is 
  * implement diff kinds of 'good' hearts -> diff scores
