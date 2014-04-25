@@ -167,25 +167,24 @@ public class GameCourt extends JPanel {
 			//check to see if snake has hit heart 
 			if ((heart.intersects(snake))) {
 				
-				//randomly spawn a new bad object 
-				if (Math.random() < 0.3) {
+				//randomly spawn a new bad object (with probability .5)
+				if (Math.random() < 0.5) {
 					bad.add_bad();
 				}
 				
 				//if level is high enough, spawn a crown randomly
-				if (snake.get_level() > 3) {
-					if (Math.random() < 0.5) {
-						crown = new Crown(COURT_WIDTH, COURT_HEIGHT);
-					}
+				if ((snake.get_level() > 2) && (Math.random() < 0.3)) {
+						crown.add_crown();
 				}
+				
 				//check current score of snake
 				//'level up' every 100 pts 
 				if ((snake.current_score()!=0) && (snake.current_score() % 100 == 0))  {
 					snake.inc_level();
 					
 					//increase velocity
-					SNAKE_VELOCITY_X += 5;
-					SNAKE_VELOCITY_Y += 5;
+					SNAKE_VELOCITY_X += 4;
+					SNAKE_VELOCITY_Y += 4;
 				}
 				
 				//update length of snake 
@@ -196,16 +195,48 @@ public class GameCourt extends JPanel {
 				heart.add_heart();
 				
 				//update score accordingly
-				if (snake.intersects(heart)) {
-					snake.inc_score_heart();
-				} else {
-					snake.inc_score_crown();
-				}
+				snake.inc_score_heart();
 				
 				//update status
 				status.setText("Score:" + Integer.toString(snake.current_score()));
 			}
 			
+			//check if snake has intersected a crown
+			if (crown.intersects(snake)) {
+				
+				//randomly spawn a bad object, with greater frequency than 
+				//if we were to hit a heart
+				if (Math.random() < 0.7) {
+					bad.add_bad();
+				}
+				
+				//update length of the snake
+				snake.growSnake(5);
+				
+				//if level is high enough, spawn another crown (although
+				//probability of crown appearing should still be low, 
+				//as it is a relatively 'rarer' object
+				if ((snake.get_level() > 2) && (Math.random() < 0.3)) {
+					crown.add_crown();
+				}
+				
+				//check current score of snake
+				//'level up' every 100 pts 
+				if ((snake.current_score()!=0) && (snake.current_score() % 100 == 0))  {
+					snake.inc_level();
+					
+					//increase velocity
+					SNAKE_VELOCITY_X += 4;
+					SNAKE_VELOCITY_Y += 4;
+				}
+				
+				//increment score by 30 points
+				snake.inc_score_crown();
+				
+				//update status 
+				status.setText("Score:" + Integer.toString(snake.current_score()));
+						
+			}
 			//check if snake has hit the wall
 			//if it has, game over
 			else if ((snake.hasHitWall() || (bad.intersects(snake)))) {
@@ -219,7 +250,7 @@ public class GameCourt extends JPanel {
 			// update the display
 			repaint();
 		}
-	}
+   }
 
 	@Override
 	public void paintComponent(Graphics g) {
@@ -261,7 +292,6 @@ public class GameCourt extends JPanel {
  * need to make sure two objs not generated at same pos
  * eg. heart is not generated where snake body is 
  * implement diff kinds of 'good' hearts -> diff scores
- * fix crown etc etc
- *
+ * 
  * 
  */

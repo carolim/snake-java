@@ -30,8 +30,11 @@ public class Crown extends GameObj {
 	public static final int INIT_Y = (int)(Math.random() * 600); //randomized INITIAL y coord
 	public static final int INIT_VEL_X = 0;
 	public static final int INIT_VEL_Y = 0;
+	public static final int MAX_NUM_CROWNS = 5; //max no. of crowns to be on the board at any one time
 
 	private static BufferedImage img;
+	
+	private LinkedList<Point> crown_objs;
 
 	public Crown(int courtWidth, int courtHeight) {
 		super(INIT_VEL_X, INIT_VEL_Y, INIT_X, INIT_Y, SIZE, SIZE, courtWidth,
@@ -43,6 +46,12 @@ public class Crown extends GameObj {
 		} catch (IOException e) {
 			System.out.println("Internal Error:" + e.getMessage());
 		}
+		
+		//intitalize linkedlist
+		crown_objs = new LinkedList<Point>();
+		//add 'first heart' at initial positions x and y
+		crown_objs.addFirst(new Point(pos_x, pos_y));
+		
 	
 	}
 	
@@ -50,17 +59,52 @@ public class Crown extends GameObj {
 
 	@Override
 	public void draw(Graphics g) {
-		//apple is drawn at a random pos on the gamecourt 
-		g.drawImage(img, pos_x, pos_y, width, height, null);
+		//draw all crowns 
+		for (int i=0; i< crown_objs.size(); i++) {
+		Point p = crown_objs.get(i);
+		g.drawImage(img, p.x, p.y, width, height, null);
+		}
 	}
-
-
-	//method that generates a new crown obj in a random location
-	public void new_location() {
-		
-		pos_x = (int)(Math.random() * max_x);
-		pos_y = (int)(Math.random() * max_y);
+	
+	//check if any of the crowns has intersected an object
+	@Override 
+	public boolean intersects(GameObj obj) {
+		for (int i=0; i<crown_objs.size();i++) {
+			Point p = crown_objs.get(i);
+			if (p.x + width >= obj.pos_x
+					&& p.y + height >= obj.pos_y
+					&& obj.pos_x + obj.width >= p.x
+					&& obj.pos_y + obj.height >= p.y) {
+				
+				//has intersected, remove crown
+				remove_crown(i);
+				return true;
+			}
+		}
+		return false;
 	}
+	
+	//method that removes crown object intersected with 
+	public void remove_crown(int i) {
+		crown_objs.remove(i);
+	}
+	
+	//method that generates a random number of crown objs
+	//in random locations (between 1-3 at a time)
+	public void add_crown() {
+		int num_times = (int)(Math.random()*3);
 
+		//make sure there are not too many crowns on
+		//the board at any one time 
+		if (crown_objs.size() <= MAX_NUM_CROWNS) {
+		for(int i = 0; i<num_times; i++) {
+			
+			//if there aren't, add crowns at a random location
+			int rand_x = (int)(Math.random() * max_x);
+			int rand_y = (int)(Math.random() * max_y);
+			crown_objs.add(new Point(rand_x, rand_y));
+		}
+		}
+	}
 
 }
