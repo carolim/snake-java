@@ -5,7 +5,6 @@
  */
 
 import java.awt.*;
-import java.util.LinkedList;
 
 /**
  * Snake game object: Here, the snake's nodes are implemented 
@@ -21,35 +20,20 @@ public class Snake extends GameObj {
 	public static final int INIT_POS_Y = 20;
 	public static final int INIT_VEL_X = 0;
 	public static final int INIT_VEL_Y = 0;
-	
-	//field variable: linkedlist for body of snake
-	public LinkedList<Point> snake_body;
-	
-	//field variable: int to keep track of the score
-	private int score;
-	
-	//field variables: ints to keep track of current level
-	private int level;
+
+	private static int score; //keeps track of score associated with the snake
+	private static int level; //keeps track of current level
 	
 
 	public Snake(int courtWidth, int courtHeight) {
 		super(INIT_VEL_X, INIT_VEL_Y, INIT_POS_X, INIT_POS_Y, SIZE, SIZE,
 				courtWidth, courtHeight);
 		
-		//set initial score to 0
-		score = 0;
-		
-		//set initial level to 1
-		level = 1;
-		
-		//initialize snake 
-		snake_body = new LinkedList<Point>();
-		//add 'head' at initial positions x and y
-		snake_body.addFirst(new Point(pos_x, pos_y));
+		score = 0; //initial score is 0
+		level = 1; //initial level is 1
 		
 	}
 	
-	//override object move method 
 	@Override 
 	public void move() {
 		
@@ -57,25 +41,25 @@ public class Snake extends GameObj {
 		//increment it so that each joint is now located at the
 		//position of the one previously in front of it 
 		
-		 for(int i = snake_body.size()-1; i >= 1; i--) {
-	            snake_body.get(i).setLocation(snake_body.get(i-1));
+		 for(int i = game_objs.size()-1; i >= 1; i--) {
+	            game_objs.get(i).setLocation(game_objs.get(i-1));
 	        }
 		 
 		 //update position of the snake 'head'
-	     snake_body.set(0, new Point((pos_x += v_x),(pos_y += v_y)));
+	     game_objs.set(0, new Point((pos_x += v_x),(pos_y += v_y)));
 	     clip();
 	}
 	
-	//override obj intersects method 
 	@Override 
 	public boolean intersects(GameObj obj) {
 		//get coordinates of snake 'head'
-		Point p = snake_body.getFirst();
+		Point p = game_objs.getFirst();
 		return (p.x + width >= obj.pos_x
 				&& p.y + height >= obj.pos_y
 				&& obj.pos_x + obj.width >= p.x
 				&& obj.pos_y + obj.height >= p.y);
 	}
+	
 	
 	//method to see if snake intersects itself
 	public boolean willHitItself() {
@@ -83,26 +67,27 @@ public class Snake extends GameObj {
 		//loop through to see if coordinates of 
 		//the snake's head and any of his body match
 		//if so, the snake has hit itself 
-		if (snake_body.size() > 1) {
+		if (game_objs.size() > 1) {
 			
-		for (int i=1; i<snake_body.size(); i++) {
-			Point p = snake_body.getFirst();
-			Point p1 = snake_body.get(i);
+		for (int i=1; i<game_objs.size(); i++) {
+			Point p = game_objs.getFirst();
+			Point p1 = game_objs.get(i);
 			
 			if ((p.x + v_x == p1.x) && (p.y + v_y == p1.y)) 
 				return true;
 			}
 		}
 		
-		//snake has not hit it's own body 
+		//snake has not hit its own body 
 		return false;
 	}
 	
-	//override hashitWall method 
+	
 	@Override
 	public boolean hasHitWall() {
+		
 		//get coordinates of snake 'head'
-		Point p = snake_body.getFirst();
+		Point p = game_objs.getFirst();
 		
 		if ((p.x + v_x < 0) || (p.x + v_x >= max_x)
 				|| (p.y + v_y < 0) || (p.y + v_y >= max_y)) {
@@ -113,21 +98,17 @@ public class Snake extends GameObj {
 		else return false;
 	}
 	
-	//method to let snake grow by however many nodes we want
+	//method to let snake grow by however many 'nodes' we want
 	public void growSnake(int x) {
 		while (x > 0) {
+			
 			//add a new point to the snake's tail
-			snake_body.add(new Point (snake_body.getLast()));
+			game_objs.add(new Point (game_objs.getLast()));
 			x--;
+			
 		}
 	}
-	
-	
-	//method to increment score when a crown
-	//has been eaten
-	public void inc_score_crown() {
-		score += 30;
-	}
+
 	
 	//method to get current score
 	public int current_score() {
@@ -139,28 +120,28 @@ public class Snake extends GameObj {
 		g.setColor(Color.blue);
 		
 		//draw rest of body
-		for(int i = 0; i < snake_body.size(); i++) {
+		for(int i = 0; i < game_objs.size(); i++) {
 			//get each particular point
-            Point p = snake_body.get(i);
+            Point p = game_objs.get(i);
             //draw as a rectangle 
             g.fillRect(p.x, p.y, 15, 15);
             
         }
 	}
 
-	//method to increase current level
+	//increase current level
 	public void inc_level() {
 		level++;
 	}
-
+	
+	//returns current level
 	public int get_level() {
 		return level;
 	}
-
-	//method to increment score accordingly 
-	//if snake has eaten a heart
-	public void inc_score_heart() {
-		score += 10;
+	
+	//sets level as specified
+	public void set_level(int i) {
+		level = i;	
 	}
 
 	//sets snake score as specified
@@ -168,10 +149,24 @@ public class Snake extends GameObj {
 		score = i;
 	}
 	
-	//sets level as specified
-	public void set_level(int i) {
-		level = i;	
+	//increments score by amount i
+	public void inc_score(int i) {
+		score += i;
 	}
 	
-
+	//method to shrink snake by however many 'nodes' we want
+	public void shrinkSnake(int i) {
+		
+		//check to make sure snake has enough nodes
+		if (game_objs.size() > i) {
+			for (int j=0;j<i;j++) {
+				game_objs.removeLast();
+			} 
+			} else {
+				//remove all nodes but the first node
+				for (int j=1;j<game_objs.size();j++) {
+					game_objs.removeLast();
+				}
+			}
+		}
 }

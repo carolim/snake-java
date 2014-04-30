@@ -26,8 +26,8 @@ import javax.imageio.ImageIO;
 public class Crown extends GameObj {
 	public static final String img_file = "crown.png";
 	public static final int SIZE = 30; //size of the crown
-	public static final int INIT_X = (int)(Math.random() * 800); //randomized INITIAL x coord
-	public static final int INIT_Y = (int)(Math.random() * 600); //randomized INITIAL y coord
+	public static final int INIT_X = (int)(Math.random() * 740); //randomized INITIAL x coord
+	public static final int INIT_Y = (int)(Math.random() * 540); //randomized INITIAL y coord
 	public static final int INIT_VEL_X = 0;
 	public static final int INIT_VEL_Y = 0;
 	public static final int MAX_NUM_CROWNS = 5; //max no. of crowns to be on the board at any one time
@@ -90,20 +90,18 @@ public class Crown extends GameObj {
 	}
 	
 	//method that generates a random number of crown objs
-	//in random locations (between 1-3 at a time)
+	//in random locations (only 1 at a time)
 	public void add_crown() {
-		int num_times = (int)(Math.random()*3);
 
 		//make sure there are not too many crowns on
 		//the board at any one time 
 		if (crown_objs.size() <= MAX_NUM_CROWNS) {
-		for(int i = 0; i<num_times; i++) {
 			
-			//if there aren't, add crowns at a random location
+			//if there aren't, add crown at a random location
 			int rand_x = (int)(Math.random() * max_x);
 			int rand_y = (int)(Math.random() * max_y);
 			crown_objs.add(new Point(rand_x, rand_y));
-		}
+			
 		}
 	}
 

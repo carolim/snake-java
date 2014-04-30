@@ -5,8 +5,6 @@
  */
 
 import java.awt.Graphics;
-import java.awt.Point;
-import java.util.LinkedList;
 
 /** An object in the game. 
  *
@@ -14,7 +12,7 @@ import java.util.LinkedList;
  *  velocity, size and bounds. Their velocity controls how they 
  *  move; their position should always be within their bounds.
  */
-public class GameObj {
+public class StaticObj {
 
 	/** Current position of the object (in terms of graphics coordinates)
 	 *  
@@ -40,17 +38,11 @@ public class GameObj {
 	 */
 	public int max_x;
 	public int max_y;
-	
-	//store particular type of game object in a linked list, with points
-	//corresponding to their coordinates on the game board 
-	
-	public LinkedList<Point> game_objs;
-	
-	
+
 	/**
 	 * Constructor
 	 */
-	public GameObj(int v_x, int v_y, int pos_x, int pos_y, 
+	public StaticObj(int v_x, int v_y, int pos_x, int pos_y, 
 		int width, int height, int court_width, int court_height){
 		this.v_x = v_x;
 		this.v_y = v_y;
@@ -63,12 +55,7 @@ public class GameObj {
 		// bounds for the upper left corner of the object.
 		this.max_x = court_width - width;
 		this.max_y = court_height - height;
-		
-		//initialize linkedlist, add first Game Object to the board 
-		game_objs = new LinkedList<Point>();
-		
-		game_objs.addFirst(new Point(pos_x, pos_y));
-		
+
 	}
 
 
@@ -97,8 +84,8 @@ public class GameObj {
 	}
 
 	/**
-	 * Go through all the game objects, seeing if any on the list 
-	 * intersect with the object at hand 
+	 * Determine whether this game object is currently intersecting
+	 * another object.
 	 * 
 	 * Intersection is determined by comparing bounding boxes. If the 
 	 * bounding boxes overlap, then an intersection is considered to occur.
@@ -107,42 +94,11 @@ public class GameObj {
 	 * @return whether this object intersects the other object.
 	 */
 	public boolean intersects(GameObj obj){
-
-		for (int i=0; i<game_objs.size(); i++) {
-			Point p = game_objs.get(i);
-			if (p.x + width >= obj.pos_x
-					&& p.y + height >= obj.pos_y
-					&& obj.pos_x + obj.width >= p.x
-					&& obj.pos_y + obj.height >= p.y) return true;
-		}
-		
-		return false;
+		return (pos_x + width >= obj.pos_x
+				&& pos_y + height >= obj.pos_y
+				&& obj.pos_x + obj.width >= pos_x 
+				&& obj.pos_y + obj.height >= pos_y);
 	}
-	
-
-	/**
-	 * Add a new Game Object to the board, at a randomized 
-	 * position 
-	 */
-	
-	public void add() {
-		
-		//create random position for object to be added
-		int rand_x = (int)(Math.random() * max_x);
-		int rand_y = (int)(Math.random() * max_y);
-		game_objs.add(new Point(rand_x, rand_y));
-		
-	}
-	
-	/**
-	 * Remove Game Object at a particular position
-	 */
-	
-	public void remove(int i) {
-		game_objs.remove(i);
-	}
-	
-	
 
 	
 	/**
@@ -189,27 +145,16 @@ public class GameObj {
 	 * @return direction of impending wall, null if all clear.
 	 */
 	public Direction hitWall() {
-		if (pos_x + v_x < 0) {
+		if (pos_x + v_x < 0)
 			return Direction.LEFT;
-		}
-		else if (pos_x + v_x > max_x) {
+		else if (pos_x + v_x > max_x)
 			return Direction.RIGHT;
-		}
-		if (pos_y + v_y < 0) {
+		if (pos_y + v_y < 0)
 			return Direction.UP;
-		}
-		else if (pos_y + v_y > max_y) {
+		else if (pos_y + v_y > max_y)
 			return Direction.DOWN;
-		}
 		else return null;
 	}
-	
-	public boolean hasHitWall() {
-		if ((pos_x + v_x < 0) || (pos_x + v_x > max_x) 
-				|| (pos_y + v_y < 0)|| (pos_y + v_y > max_y)) return true;
-		else return false;
-	}
-	
 
 	/** Determine whether the game object will hit another 
 	 *  object in the next time step. If so, return the direction

@@ -7,36 +7,42 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-
 /**
  * GameCourt
  * 
  * This class holds the primary game logic for how different objects interact
- * with one another. Take time to understand how the timer interacts with the
- * different methods and how it repaints the GUI on every tick().
+ * with one another. 
  * 
  */
 @SuppressWarnings("serial")
 public class GameCourt extends JPanel {
 	
+	private BufferedReader r; //reader to read in text
+	private BufferedWriter out; //to overwrite the text 
+	private int highscore; //stores the current high score
+	private boolean health_init; //boolean to check if health obj has been initialized
+	
 	// the state of the game logic
 	private Snake snake; // creates a new snake
-	private Heart heart; //creates a good object - heart!!
-	private Crown crown; //creates a crown (good object)
-	private Bad bad; //creates 'bad' object snake cannot touch
-
+	private Heart heart; //creates a good object (heart)
+	private Crown crown; //creates a good object (crown)
+	private Bad bad; //creates a bad object (skull) 
+	private Health health; 
+	
 	public boolean playing = false; // whether the game is running
 	private JLabel status; 
 	
-	//string names of images to be loaded 
+	//images to be loaded (game over & instructions)
 	public static final String game_overimg = "gameover.png";
 	private static BufferedImage img;
 	
@@ -45,22 +51,23 @@ public class GameCourt extends JPanel {
 	
 	public boolean instructionspressed = false;
 	
-	// Game constants
+	// game constants
 	public static final int COURT_WIDTH = 800;
 	public static final int COURT_HEIGHT = 600;
 	public static int SNAKE_VELOCITY_X = 5;
 	public static int SNAKE_VELOCITY_Y = 5;
 	// Update interval for timer, in milliseconds
 	public static final int INTERVAL = 35;
-
+	
 
 	public GameCourt(JLabel status) {
+		
 		// creates border around the court area, JComponent method
 		setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
 		setBackground(Color.YELLOW);
 		
-		//initialize game over image & instructions image
+		//attempt to load images 
 		try {
 			if (img == null) {
 				img = ImageIO.read(new File(game_overimg));
@@ -69,6 +76,20 @@ public class GameCourt extends JPanel {
 		} catch (IOException e) {
 			System.out.println("Internal Error:" + e.getMessage());
 		}
+		
+		String s;
+		
+		try {
+			
+			//read in first (& should be only) line from highscore text 
+			r = new BufferedReader(new FileReader("highscore.txt"));
+			s = r.readLine();
+			s = s.trim(); //get rid of all whitespace
+			highscore = Integer.parseInt(s); //store current high score 
+			
+		} catch (IOException e) {}
+		
+		
 		
 		// The timer is an object which triggers an action periodically
 		// with the given INTERVAL. One registers an ActionListener with
@@ -82,7 +103,11 @@ public class GameCourt extends JPanel {
 			}
 		});
 		timer.start(); // MAKE SURE TO START THE TIMER!
-
+		
+		//Health timer - once health object is added to the board,
+		//will stay on the board for 5 seconds before disappearing 
+		
+		
 		// Enable keyboard focus on the court area.
 		// When this component has the keyboard focus, key
 		// events will be handled by its key listener.
@@ -91,7 +116,9 @@ public class GameCourt extends JPanel {
 		
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				//key is pressed, change velocities accordingly
+				
+				//key is pressed, change snake velocity accordingly
+				
 				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 					snake.v_y = 0;
 					snake.v_x = -SNAKE_VELOCITY_X;
@@ -109,10 +136,7 @@ public class GameCourt extends JPanel {
 					snake.v_y = -SNAKE_VELOCITY_Y;	
 				}
 			}
-			
-			public void keyReleased(KeyEvent e) {
-				//nothing here
-			}
+
 
 		});
 
@@ -124,14 +148,16 @@ public class GameCourt extends JPanel {
 	 * (Re-)set the game to its initial state.
 	 */
 	public void reset() {
-
+		
+		//initialize game objects
 		snake = new Snake(COURT_WIDTH, COURT_HEIGHT);
 		heart = new Heart(COURT_WIDTH, COURT_HEIGHT);
 		bad = new Bad(COURT_WIDTH, COURT_HEIGHT);
 		crown = new Crown(COURT_WIDTH, COURT_HEIGHT);
-		
+		health = null;
+		health_init = false; //health obj. has NOT been initialized 
+
 		//reset score and level 
-		instructionspressed = false;
 		snake.set_score(0);
 		snake.set_level(1);
 		
@@ -139,9 +165,17 @@ public class GameCourt extends JPanel {
 		SNAKE_VELOCITY_X = 4;
 		SNAKE_VELOCITY_Y = 4;
 		
+		//reset instructions pressed to false
+		instructionspressed = false;
+		
 		//set playing status to true 
 		playing = true;
-		status.setText("Score: " + Integer.toString(snake.current_score()));
+		
+		//reset label text 
+		status.setText("High Score:" + Integer.toString(highscore) + "     "
+				+ "Level:" + Integer.toString(snake.get_level()) + 
+				"     Score:" + Integer.toString(snake.current_score()) + "     ");
+		
 		// Make sure that this component has the keyboard focus
 		requestFocusInWindow();
 	}
@@ -152,6 +186,7 @@ public class GameCourt extends JPanel {
 		instructionspressed = true;
 		requestFocusInWindow();
 		repaint();
+		
 	}
 	
 
@@ -161,19 +196,48 @@ public class GameCourt extends JPanel {
 	 */
 	void tick() {
 		if (playing) {
+			
 			//advance the snake in its current direction
 			snake.move();
 			
-			//check to see if snake has hit heart 
+			
+			//if health object has been initialized, respawn it with 
+			//frequency .005
+			if ((health!=null) && (Math.random()<0.02)) {
+				health.respawn();
+			}
+			
+			//if score is high enough, generate a new health object 
+			//with freq. .01 
+			if ((snake.current_score() > 300) && (Math.random() < 0.01)) {
+				
+				//see if health obj has been initialized
+				if (health_init==false) {
+					//initialize new obj 
+					health = new Health(COURT_WIDTH, COURT_HEIGHT);
+					health_init = true;
+				} 	
+			}
+			
+			//if health object intersects snake, should 'cut off'
+			//the snake's tail by 30 nodes 
+			if ((health!=null) && (health.intersects(snake))) {
+				health.respawn();
+				snake.shrinkSnake(50);
+			}
+			
+			//check to see if snake has hit a heart 
 			if ((heart.intersects(snake))) {
 				
-				//randomly spawn a new bad object (with probability .5)
+				//randomly spawn a new bad object, .5 of the time
 				if (Math.random() < 0.5) {
-					bad.add_bad();
+					bad.add();
 				}
 				
-				//if level is high enough, spawn a crown randomly
-				if ((snake.current_score() > 150) && (Math.random() < 0.4)) {
+				//if current score is high enough, randomly
+				//spawn a crown, with probability .3
+				
+				if ((snake.current_score() > 200) && (Math.random() < 0.3)) {
 						crown.add_crown();
 				}
 				
@@ -183,8 +247,9 @@ public class GameCourt extends JPanel {
 					snake.inc_level();
 					
 					//increase velocity
-					SNAKE_VELOCITY_X += 4;
-					SNAKE_VELOCITY_Y += 4;
+					SNAKE_VELOCITY_X += 1;
+					SNAKE_VELOCITY_Y += 1;
+						
 				}
 				
 				//update length of snake 
@@ -192,31 +257,31 @@ public class GameCourt extends JPanel {
 				
 				//current heart object 'disappears,' generating
 				//new heart in randomly generated, different location
-				heart.add_heart();
+				heart.add();
 				
 				//update score accordingly
-				snake.inc_score_heart();
+				snake.inc_score(10);
 				
 				//update status
-				status.setText("Score:" + Integer.toString(snake.current_score()));
+				status.setText("High Score:" + Integer.toString(highscore) + "     " +
+				"Level:" + Integer.toString(snake.get_level()) + 
+				"     Score:" + Integer.toString(snake.current_score()) + "     ");
 			}
 			
 			//check if snake has intersected a crown
 			if (crown.intersects(snake)) {
 				
-				//randomly spawn a bad object, with greater frequency than 
-				//if we were to hit a heart
-				if (Math.random() < 0.7) {
-					bad.add_bad();
+				//randomly spawn a bad object, with frequency .6
+				if (Math.random() < 0.6) {
+					bad.add();
 				}
 				
 				//update length of the snake
 				snake.growSnake(5);
 				
-				//if level is high enough, spawn another crown (although
-				//probability of crown appearing should still be low, 
-				//as it is a relatively 'rarer' object
-				if ((snake.current_score() > 150) && (Math.random() < 0.4)) {
+				//if score is high enough, randomly spawn another crown
+				//with frequency .3 
+				if ((snake.current_score() > 350) && (Math.random() < 0.3)) {
 					crown.add_crown();
 				}
 				
@@ -226,27 +291,49 @@ public class GameCourt extends JPanel {
 					snake.inc_level();
 					
 					//increase velocity
-					SNAKE_VELOCITY_X += 4;
-					SNAKE_VELOCITY_Y += 4;
+					SNAKE_VELOCITY_X += 1;
+					SNAKE_VELOCITY_Y += 1;
+					
 				}
 				
 				//increment score by 30 points
-				snake.inc_score_crown();
+				snake.inc_score(30);
 				
 				//update status 
-				status.setText("Score:" + Integer.toString(snake.current_score()));
-						
+				status.setText("High Score:" + Integer.toString(highscore) + "     "
+						+ "Level:" + Integer.toString(snake.get_level()) + 
+				"     Score:" + Integer.toString(snake.current_score()) + "     ");		
 			}
-			//check if snake has hit the wall
-			//if it has, game over
+			
+			
+			//check if snake has hit the wall, intersected with a bad object 
+			//or hit itself. if it has, the game is over 
 			else if ((snake.hasHitWall() || (bad.intersects(snake)
-					|| (snake.willHitItself())))) {
+				|| (snake.willHitItself())))) {
+				
+				//TODO: CHECK IF CURRENT SCORE IS GREATER THAN HIGH SCORE
+				//IF IT IS, UPDATE HIGHSCORE.TXT
+				
+				if (snake.current_score() > highscore) {
+					
+					//set local highscore 
+					highscore = snake.current_score();
+					
+					//write new highscore to file
+					try {
+						
+						//open stream, write to file, close stream
+						out = new BufferedWriter(new FileWriter("highscore.txt"));
+						out.write(Integer.toString(snake.current_score()));
+						out.close();
+						
+					} catch (IOException e) {} 
+
+				}
 				
 				playing = false;
 				
 			}
-			
-			//TO DO: check if snake has hit itself
 
 			// update the display
 			repaint();
@@ -261,21 +348,29 @@ public class GameCourt extends JPanel {
 		//check if instructions button has been pressed 
 		if (instructionspressed) {
 			
-		//draw instructions screen
+		//if so, draw the instructions screen
 		g.drawImage(instructionsimg, 0, 120, 800, 400, null);
 			
 		}
+		
 		//check if game is over
 		else if (!playing) {
-		
+	
 			//if yes, draw game over sign 
 			g.drawImage(img, 150, 150, 500, 300, null);
 			
 		} else {
+			
+			//redraw game components 
 			snake.draw(g);
 			heart.draw(g);
 			bad.draw(g);
-			crown.draw(g);
+			crown.draw(g);	
+			
+			//checks to see if there is a health obj. on the game board
+			if (health!=null) {
+				health.draw(g);
+			}
 		}
 	}
 
@@ -287,11 +382,8 @@ public class GameCourt extends JPanel {
 
 /*
  * Stuff to implement: 
- * make panel look nicer!!
- * high score button ?
- * need to make sure two objs not generated at same pos
+ * !!!!IMPT: need to make sure two objs not generated at same pos
+ * need to check to make sure no other objects are in the vicinity before adding 
  * eg. heart is not generated where snake body is 
- * implement diff kinds of 'good' hearts -> diff scores
- * 
- * 
+ * HEALTH -> should appear in a diff place when it is regenerated 
  */

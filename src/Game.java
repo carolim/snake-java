@@ -22,7 +22,7 @@ public class Game implements Runnable {
 		final JPanel status_panel = new JPanel();
 		frame.add(status_panel, BorderLayout.SOUTH);
 		//status panel displays current score 
-		final JLabel status = new JLabel("Score: ");
+		final JLabel status = new JLabel();
 		status.setFont((new Font("Courier New",1,15)));
 		status_panel.add(status);
 		
@@ -31,7 +31,6 @@ public class Game implements Runnable {
 		frame.add(court, BorderLayout.CENTER);
 		
 		
-
 		//RESET button 
 		// Note here that when we add an action listener to the reset
 		// button, we define it as an anonymous inner class that is
@@ -45,6 +44,7 @@ public class Game implements Runnable {
 				court.reset();
 			}
 		});
+		
 		
 		//INSTRUCTIONS button
 		//if this button is pressed, screen will show a set of instructions
